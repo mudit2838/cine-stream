@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { getPosterUrl } from '../api/tmdb';
 import PosterFallback from './PosterFallback';
+import HeartButton from './HeartButton';
 
 export default function MovieCard({ movie }) {
   const [imageError, setImageError] = useState(false);
@@ -26,6 +27,10 @@ export default function MovieCard({ movie }) {
   return (
     <div className="group relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:border-slate-700 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
       <div className="relative aspect-[2/3] w-full bg-slate-950 overflow-hidden flex-shrink-0">
+        <div className="absolute top-2 left-2 z-20">
+          <HeartButton movie={movie} />
+        </div>
+
         {showFallback ? (
           <PosterFallback title={title} />
         ) : (
