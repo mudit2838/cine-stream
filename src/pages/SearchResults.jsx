@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { searchMovies } from '../api/tmdb';
 import MovieGrid from '../components/MovieGrid';
 import { Loader2, Search, AlertCircle, RefreshCw } from 'lucide-react';
@@ -13,34 +14,46 @@ export default function SearchResults() {
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const fetchSearchResults = useCallback(async () => {
+  useEffect(() => {
     if (!query.trim()) {
       setMovies([]);
       setLoading(false);
       setHasSearched(false);
+      setError(null);
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
-      setHasSearched(true);
-      const data = await searchMovies(query, 1);
-      setMovies(data.results);
-    } catch (err) {
-      console.error('Failed to search movies:', err);
-      setError(
-        err?.response?.data?.status_message ||
-          'Failed to perform search. Please check your network connection.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
+    const controller = new AbortController();
 
-  useEffect(() => {
-    fetchSearchResults();
-  }, [fetchSearchResults]);
+    async function fetchResults() {
+      try {
+        setLoading(true);
+        setError(null);
+        setHasSearched(true);
+        const data = await searchMovies(query, 1, { signal: controller.signal });
+        setMovies(data.results);
+      } catch (err) {
+        if (axios.isCancel(err) || err.name === 'CanceledError' || err.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to search movies:', err);
+        setError(
+          err?.response?.data?.status_message ||
+            'Failed to perform search. Please check your network connection.'
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchResults();
+
+    return () => {
+      controller.abort();
+    };
+  }, [query]);
 
   return (
     <div className="space-y-6">
@@ -95,7 +108,7 @@ export default function SearchResults() {
           </div>
           <p className="text-sm text-slate-300">{error}</p>
           <button
-            onClick={fetchSearchResults}
+            onClick={() => window.location.reload()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
           >
             <RefreshCw className="w-4 h-4" />

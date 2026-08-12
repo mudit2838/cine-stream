@@ -26,9 +26,10 @@ const tmdbClient = axios.create({
   },
 });
 
-export async function getPopularMovies(page = 1) {
+export async function getPopularMovies(page = 1, options = {}) {
   const response = await tmdbClient.get('/movie/popular', {
     params: { page },
+    ...options,
   });
   return {
     results: response.data.results || [],
@@ -37,12 +38,13 @@ export async function getPopularMovies(page = 1) {
   };
 }
 
-export async function searchMovies(query, page = 1) {
+export async function searchMovies(query, page = 1, options = {}) {
   if (!query || !query.trim()) {
     return { results: [], totalPages: 0, page: 1 };
   }
   const response = await tmdbClient.get('/search/movie', {
     params: { query: query.trim(), page },
+    ...options,
   });
   return {
     results: response.data.results || [],

@@ -1,21 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
+import useDebounce from '../hooks/useDebounce';
 
 export default function SearchBar() {
   const [searchParams] = useSearchParams();
   const urlQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(urlQuery);
+  const debouncedQuery = useDebounce(query, 500);
   const navigate = useNavigate();
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     setQuery(urlQuery);
   }, [urlQuery]);
 
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const trimmed = debouncedQuery.trim();
+    if (trimmed && trimmed !== urlQuery) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`, { replace: true });
+    }
+  }, [debouncedQuery, navigate, urlQuery]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = query.trim();
-    if (trimmed) {
+    if (trimmed && trimmed !== urlQuery) {
       navigate(`/search?q=${encodeURIComponent(trimmed)}`);
     }
   };
