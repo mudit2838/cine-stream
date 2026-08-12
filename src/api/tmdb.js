@@ -36,3 +36,17 @@ export async function getPopularMovies(page = 1) {
     page: response.data.page || page,
   };
 }
+
+export async function searchMovies(query, page = 1) {
+  if (!query || !query.trim()) {
+    return { results: [], totalPages: 0, page: 1 };
+  }
+  const response = await tmdbClient.get('/search/movie', {
+    params: { query: query.trim(), page },
+  });
+  return {
+    results: response.data.results || [],
+    totalPages: response.data.total_pages || 1,
+    page: response.data.page || page,
+  };
+}

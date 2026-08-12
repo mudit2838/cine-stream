@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import Home from './pages/Home';
 import SearchResults from './pages/SearchResults';
 import Favorites from './pages/Favorites';
+import SearchBar from './components/SearchBar';
 import { Film, Search, Heart } from 'lucide-react';
 
 export default function App() {
@@ -9,16 +10,20 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
         <header className="sticky top-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <NavLink
               to="/"
-              className="flex items-center gap-2 text-xl font-bold text-red-500 hover:text-red-400 transition-colors"
+              className="flex items-center gap-2 text-xl font-bold text-red-500 hover:text-red-400 transition-colors shrink-0"
             >
               <Film className="w-6 h-6" />
-              <span>CineStream</span>
+              <span className="hidden sm:inline">CineStream</span>
             </NavLink>
 
-            <nav className="flex items-center gap-1 sm:gap-4">
+            <div className="flex-1 max-w-md mx-2">
+              <SearchBar />
+            </div>
+
+            <nav className="flex items-center gap-1 sm:gap-4 shrink-0">
               <NavLink
                 to="/"
                 end
@@ -44,7 +49,7 @@ export default function App() {
                 }
               >
                 <Search className="w-4 h-4" />
-                <span>Search</span>
+                <span className="hidden sm:inline">Search</span>
               </NavLink>
 
               <NavLink
@@ -58,7 +63,7 @@ export default function App() {
                 }
               >
                 <Heart className="w-4 h-4" />
-                <span>Favorites</span>
+                <span className="hidden sm:inline">Favorites</span>
               </NavLink>
             </nav>
           </div>
