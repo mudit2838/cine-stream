@@ -1,19 +1,25 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getPopularMovies } from '../api/tmdb';
 import MovieGrid from '../components/MovieGrid';
+import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { Loader2, AlertCircle, RefreshCw, Flame } from 'lucide-react';
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchMovies = useCallback(async () => {
+  const fetchInitialMovies = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getPopularMovies(1);
       setMovies(data.results);
+      setPage(1);
+      setTotalPages(data.totalPages);
     } catch (err) {
       console.error('Failed to fetch popular movies:', err);
       setError(
@@ -25,9 +31,37 @@ export default function Home() {
     }
   }, []);
 
+  const fetchMoreMovies = useCallback(async () => {
+    if (loading || loadingMore || page >= totalPages) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const data = await getPopularMovies(nextPage);
+
+      setMovies((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const uniqueNewMovies = data.results.filter((m) => !existingIds.has(m.id));
+        return [...prev, ...uniqueNewMovies];
+      });
+
+      setPage(nextPage);
+      setTotalPages(data.totalPages);
+    } catch (err) {
+      console.error('Failed to fetch more movies:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, page, totalPages]);
+
   useEffect(() => {
-    fetchMovies();
-  }, [fetchMovies]);
+    fetchInitialMovies();
+  }, [fetchInitialMovies]);
+
+  const sentinelRef = useInfiniteScroll(fetchMoreMovies, {
+    hasMore: page < totalPages,
+    isLoading: loading || loadingMore,
+  });
 
   return (
     <div className="space-y-6">
@@ -66,7 +100,7 @@ export default function Home() {
           </div>
           <p className="text-sm text-slate-300">{error}</p>
           <button
-            onClick={fetchMovies}
+            onClick={fetchInitialMovies}
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
           >
             <RefreshCw className="w-4 h-4" />
@@ -75,7 +109,22 @@ export default function Home() {
         </div>
       )}
 
-      {!loading && !error && <MovieGrid movies={movies} />}
+      {!loading && !error && (
+        <>
+          <MovieGrid movies={movies} />
+
+          {page < totalPages && (
+            <div ref={sentinelRef} className="h-16 flex items-center justify-center py-4">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                  <Loader2 className="w-5 h-5 animate-spin text-red-500" />
+                  <span>Loading more movies...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

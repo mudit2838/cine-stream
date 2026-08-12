@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { searchMovies } from '../api/tmdb';
 import MovieGrid from '../components/MovieGrid';
+import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { Loader2, Search, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function SearchResults() {
@@ -10,14 +11,20 @@ export default function SearchResults() {
   const query = searchParams.get('q') || '';
 
   const [movies, setMovies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     if (!query.trim()) {
       setMovies([]);
+      setPage(1);
+      setTotalPages(1);
       setLoading(false);
+      setLoadingMore(false);
       setHasSearched(false);
       setError(null);
       return;
@@ -32,6 +39,8 @@ export default function SearchResults() {
         setHasSearched(true);
         const data = await searchMovies(query, 1, { signal: controller.signal });
         setMovies(data.results);
+        setPage(1);
+        setTotalPages(data.totalPages);
       } catch (err) {
         if (axios.isCancel(err) || err.name === 'CanceledError' || err.name === 'AbortError') {
           return;
@@ -54,6 +63,34 @@ export default function SearchResults() {
       controller.abort();
     };
   }, [query]);
+
+  const fetchMoreResults = useCallback(async () => {
+    if (loading || loadingMore || page >= totalPages || !query.trim()) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const data = await searchMovies(query, nextPage);
+
+      setMovies((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const uniqueNewMovies = data.results.filter((m) => !existingIds.has(m.id));
+        return [...prev, ...uniqueNewMovies];
+      });
+
+      setPage(nextPage);
+      setTotalPages(data.totalPages);
+    } catch (err) {
+      console.error('Failed to fetch more search results:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, page, totalPages, query]);
+
+  const sentinelRef = useInfiniteScroll(fetchMoreResults, {
+    hasMore: page < totalPages,
+    isLoading: loading || loadingMore,
+  });
 
   return (
     <div className="space-y-6">
@@ -128,7 +165,22 @@ export default function SearchResults() {
         </div>
       )}
 
-      {!loading && !error && movies.length > 0 && <MovieGrid movies={movies} />}
+      {!loading && !error && movies.length > 0 && (
+        <>
+          <MovieGrid movies={movies} />
+
+          {page < totalPages && (
+            <div ref={sentinelRef} className="h-16 flex items-center justify-center py-4">
+              {loadingMore && (
+                <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                  <Loader2 className="w-5 h-5 animate-spin text-red-500" />
+                  <span>Loading more results...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
