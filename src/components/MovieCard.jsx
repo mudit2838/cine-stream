@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { POSTER_BASE_URL } from '../api/tmdb';
+import { getPosterUrl } from '../api/tmdb';
+import PosterFallback from './PosterFallback';
 
 export default function MovieCard({ movie }) {
+  const [imageError, setImageError] = useState(false);
+
   if (!movie) return null;
 
   const title = movie.title || movie.name || movie.original_title || 'Untitled';
@@ -16,30 +20,25 @@ export default function MovieCard({ movie }) {
       ? movie.vote_average.toFixed(1)
       : 'N/A';
 
-  const posterUrl = movie.poster_path
-    ? movie.poster_path.startsWith('http')
-      ? movie.poster_path
-      : `${POSTER_BASE_URL}${movie.poster_path}`
-    : null;
+  const posterUrl = getPosterUrl(movie.poster_path);
+  const showFallback = !posterUrl || imageError;
 
   return (
     <div className="group relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:border-slate-700 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
-      <div className="relative aspect-[2/3] w-full bg-slate-950 overflow-hidden">
-        {posterUrl ? (
+      <div className="relative aspect-[2/3] w-full bg-slate-950 overflow-hidden flex-shrink-0">
+        {showFallback ? (
+          <PosterFallback title={title} />
+        ) : (
           <img
             src={posterUrl}
             alt={title}
+            onError={() => setImageError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-slate-850 text-slate-500 text-center">
-            <span className="text-sm font-medium">{title}</span>
-            <span className="text-xs mt-1">No Poster Available</span>
-          </div>
         )}
 
         {rating !== 'N/A' && (
-          <div className="absolute top-2 right-2 px-2 py-1 bg-slate-950/80 backdrop-blur-md rounded-md border border-slate-700/50 flex items-center gap-1 text-xs font-semibold text-amber-400">
+          <div className="absolute top-2 right-2 px-2 py-1 bg-slate-950/80 backdrop-blur-md rounded-md border border-slate-700/50 flex items-center gap-1 text-xs font-semibold text-amber-400 z-10">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{rating}</span>
           </div>
