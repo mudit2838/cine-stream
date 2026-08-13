@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { getPosterUrl } from '../api/tmdb';
+import { getPosterUrl, getPosterSrcSet } from '../api/tmdb';
 import PosterFallback from './PosterFallback';
 import HeartButton from './HeartButton';
 
-export default function MovieCard({ movie }) {
+export default function MovieCard({ movie, isPriority = false }) {
   const [imageError, setImageError] = useState(false);
 
   if (!movie) return null;
@@ -22,6 +22,7 @@ export default function MovieCard({ movie }) {
       : 'N/A';
 
   const posterUrl = getPosterUrl(movie.poster_path);
+  const posterSrcSet = getPosterSrcSet(movie.poster_path);
   const showFallback = !posterUrl || imageError;
 
   return (
@@ -36,12 +37,18 @@ export default function MovieCard({ movie }) {
         ) : (
           <img
             src={posterUrl}
+            srcSet={posterSrcSet || undefined}
+            sizes="(max-width: 640px) 185px, 342px"
             alt={title}
-            loading="lazy"
+            width="185"
+            height="278"
+            loading={isPriority ? 'eager' : 'lazy'}
+            fetchpriority={isPriority ? 'high' : 'low'}
             onError={() => setImageError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         )}
+
 
         {rating !== 'N/A' && (
           <div className="absolute top-2 right-2 px-2 py-1 bg-slate-950/80 backdrop-blur-md rounded-md border border-slate-700/50 flex items-center gap-1 text-xs font-semibold text-amber-400 z-10">
@@ -63,3 +70,4 @@ export default function MovieCard({ movie }) {
     </div>
   );
 }
+

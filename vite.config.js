@@ -6,5 +6,18 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@google/genai'],
   },
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'lucide-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
 });
+
 

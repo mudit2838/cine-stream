@@ -1,7 +1,10 @@
 import { GoogleGenAI } from '@google/genai';
 
 const apiKey =
-  import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_AI_API_KEY || '';
+  (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_AI_API_KEY)) ||
+  (typeof process !== 'undefined' && (process.env.VITE_GEMINI_API_KEY || process.env.VITE_AI_API_KEY)) ||
+  '';
+
 
 
 

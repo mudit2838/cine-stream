@@ -1,10 +1,19 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { FavoritesProvider } from './context/FavoritesContext';
-import Home from './pages/Home';
-import SearchResults from './pages/SearchResults';
-import Favorites from './pages/Favorites';
 import SearchBar from './components/SearchBar';
-import { Film, Search, Heart } from 'lucide-react';
+import { Film, Search, Heart, Loader2 } from 'lucide-react';
+
+const Home = lazy(() => import('./pages/Home'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+
+const PageFallback = () => (
+  <div className="flex items-center justify-center py-20 text-slate-400 gap-3">
+    <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+    <span className="text-base font-medium">Loading...</span>
+  </div>
+);
 
 export default function App() {
   return (
@@ -76,14 +85,17 @@ export default function App() {
           </header>
 
           <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/favorites" element={<Favorites />} />
-            </Routes>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/favorites" element={<Favorites />} />
+              </Routes>
+            </Suspense>
           </main>
         </div>
       </BrowserRouter>
     </FavoritesProvider>
   );
 }
+

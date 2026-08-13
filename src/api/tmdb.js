@@ -1,13 +1,19 @@
 import axios from 'axios';
 
 const TMDB_BASE_URL =
-  import.meta.env.VITE_TMDB_BASE_URL || 'https://api.tmdb.org/3';
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TMDB_BASE_URL) ||
+  'https://api.tmdb.org/3';
 const TMDB_FALLBACK_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_KEY = import.meta.env.VITE_TMDB_KEY || '';
+const TMDB_KEY =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TMDB_KEY) ||
+  (typeof process !== 'undefined' && process.env.VITE_TMDB_KEY) ||
+  '';
 
 
 
-export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+
+export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w342';
+
 
 export function getPosterUrl(posterPath) {
   if (!posterPath) return null;
@@ -15,6 +21,12 @@ export function getPosterUrl(posterPath) {
     return posterPath;
   }
   return `${POSTER_BASE_URL}${posterPath.startsWith('/') ? posterPath : '/' + posterPath}`;
+}
+
+export function getPosterSrcSet(posterPath) {
+  if (!posterPath || posterPath.startsWith('http')) return null;
+  const cleanPath = posterPath.startsWith('/') ? posterPath : '/' + posterPath;
+  return `https://image.tmdb.org/t/p/w185${cleanPath} 185w, https://image.tmdb.org/t/p/w342${cleanPath} 342w`;
 }
 
 const tmdbClient = axios.create({
@@ -47,7 +59,26 @@ tmdbClient.interceptors.response.use(
   }
 );
 
+let initialPopularPromise = null;
+
 export async function getPopularMovies(page = 1, options = {}) {
+  if (page === 1 && !options?.bypassCache) {
+    if (!initialPopularPromise) {
+      initialPopularPromise = tmdbClient
+        .get('/movie/popular', { params: { page: 1 }, ...options })
+        .then((response) => ({
+          results: response.data.results || [],
+          totalPages: response.data.total_pages || 1,
+          page: response.data.page || 1,
+        }))
+        .catch((err) => {
+          initialPopularPromise = null;
+          throw err;
+        });
+    }
+    return initialPopularPromise;
+  }
+
   const response = await tmdbClient.get('/movie/popular', {
     params: { page },
     ...options,
@@ -58,6 +89,13 @@ export async function getPopularMovies(page = 1, options = {}) {
     page: response.data.page || page,
   };
 }
+
+if (typeof window !== 'undefined') {
+  try {
+    getPopularMovies(1).catch(() => {});
+  } catch {}
+}
+
 
 export async function searchMovies(query, page = 1, options = {}) {
   if (!query || !query.trim()) {

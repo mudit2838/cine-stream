@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { getMoodMatchTitle } from '../api/ai';
 import { searchMovies } from '../api/tmdb';
 import MovieCard from './MovieCard';
 import { Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -21,8 +20,10 @@ export default function MoodMatcher() {
       setError(null);
       setMatchedMovie(null);
 
+      const { getMoodMatchTitle } = await import('../api/ai');
       const title = await getMoodMatchTitle(trimmed);
       setSuggestedTitle(title);
+
 
       const tmdbResult = await searchMovies(title, 1);
       if (tmdbResult.results && tmdbResult.results.length > 0) {
