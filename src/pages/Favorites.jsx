@@ -29,11 +29,12 @@ export default function Favorites() {
             No Favorites Saved Yet
           </h2>
           <p className="text-sm text-slate-400">
-            You haven&apos;t favorited any movies yet — go find something to watch!
+            You haven&apos;t favorited any movies yet — go find something to
+            watch!
           </p>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md mt-2"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md mt-2 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Browse Popular Movies</span>

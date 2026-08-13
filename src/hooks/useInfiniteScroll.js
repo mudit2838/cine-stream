@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-export default function useInfiniteScroll(callback, { hasMore = true, isLoading = false } = {}) {
+export default function useInfiniteScroll(
+  callback,
+  { hasMore = true, isLoading = false } = {}
+) {
   const observerRef = useRef(null);
   const sentinelRef = useRef(null);
 

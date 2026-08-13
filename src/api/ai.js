@@ -1,59 +1,46 @@
-import axios from 'axios';
+import { GoogleGenAI } from '@google/genai';
 
-const AI_KEY = import.meta.env.VITE_AI_API_KEY || '';
+const apiKey =
+  import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_AI_API_KEY || '';
+
+
+
+const ai = new GoogleGenAI({
+  apiKey: apiKey,
+});
 
 export async function getMoodMatchTitle(moodInput) {
   if (!moodInput || !moodInput.trim()) {
     throw new Error('Mood input cannot be empty');
   }
 
-  const promptText = `Suggest ONE movie based on this mood: ${moodInput.trim()}. Return ONLY the movie title as a plaintext string.`;
+  const promptText = `Suggest ONE popular movie title based on this mood: "${moodInput.trim()}". Return ONLY the exact movie title as a single line of plain text without quotes, punctuation, or explanations.`;
+
+  const models = [
+    'gemini-3.6-flash',
+    'gemini-flash-latest',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash-lite',
+  ];
 
   let rawTitle = '';
+  let lastErr = null;
 
-  if (AI_KEY.startsWith('sk-')) {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: promptText }],
-        temperature: 0.7,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${AI_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    rawTitle = response.data.choices[0]?.message?.content || '';
-  } else {
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'gemini-2.0-flash'];
-    let lastError = null;
-
-    for (const model of models) {
-      try {
-        const response = await axios.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${AI_KEY}`,
-          {
-            contents: [{ parts: [{ text: promptText }] }],
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        rawTitle = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (rawTitle) break;
-      } catch (err) {
-        lastError = err;
-      }
+  for (const modelName of models) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: promptText,
+      });
+      rawTitle = response.text || '';
+      if (rawTitle) break;
+    } catch (err) {
+      lastErr = err;
     }
+  }
 
-    if (!rawTitle && lastError) {
-      throw lastError;
-    }
+  if (!rawTitle && lastErr) {
+    throw lastErr;
   }
 
   const sanitized = rawTitle
@@ -69,3 +56,5 @@ export async function getMoodMatchTitle(moodInput) {
 
   return sanitized;
 }
+
+

@@ -52,7 +52,10 @@ export default function MovieCard({ movie }) {
       </div>
 
       <div className="p-3.5 flex flex-col flex-1 justify-between gap-1">
-        <h3 className="font-semibold text-slate-100 text-sm line-clamp-1 group-hover:text-red-400 transition-colors" title={title}>
+        <h3
+          className="font-semibold text-slate-100 text-sm line-clamp-1 group-hover:text-red-400 transition-colors"
+          title={title}
+        >
           {title}
         </h3>
         <p className="text-xs text-slate-400 font-medium">{releaseYear}</p>

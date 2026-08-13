@@ -15,7 +15,8 @@ export default function App() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
               <NavLink
                 to="/"
-                className="flex items-center gap-2 text-xl font-bold text-red-500 hover:text-red-400 transition-colors shrink-0"
+                aria-label="CineStream Home"
+                className="flex items-center gap-2 text-xl font-bold text-red-500 hover:text-red-400 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none rounded-md px-1"
               >
                 <Film className="w-6 h-6" />
                 <span className="hidden sm:inline">CineStream</span>
@@ -29,8 +30,9 @@ export default function App() {
                 <NavLink
                   to="/"
                   end
+                  aria-label="Home"
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none ${
                       isActive
                         ? 'bg-slate-800 text-white'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -42,8 +44,9 @@ export default function App() {
 
                 <NavLink
                   to="/search"
+                  aria-label="Search movies"
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none ${
                       isActive
                         ? 'bg-slate-800 text-white'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -56,8 +59,9 @@ export default function App() {
 
                 <NavLink
                   to="/favorites"
+                  aria-label="Favorite movies"
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    `flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none ${
                       isActive
                         ? 'bg-slate-800 text-white'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'

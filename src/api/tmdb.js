@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL =
+  import.meta.env.VITE_TMDB_BASE_URL || 'https://api.tmdb.org/3';
+const TMDB_FALLBACK_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_KEY = import.meta.env.VITE_TMDB_KEY || '';
+
+
 
 export const POSTER_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
@@ -15,6 +19,7 @@ export function getPosterUrl(posterPath) {
 
 const tmdbClient = axios.create({
   baseURL: TMDB_BASE_URL,
+  timeout: 8000,
   params: {
     api_key: TMDB_KEY,
   },
@@ -25,6 +30,22 @@ const tmdbClient = axios.create({
       : {}),
   },
 });
+
+// Interceptor to fallback if primary domain experiences network/DNS failure
+tmdbClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    if (config && !config._retry) {
+      config._retry = true;
+      const currentBase = config.baseURL || TMDB_BASE_URL;
+      config.baseURL =
+        currentBase === TMDB_BASE_URL ? TMDB_FALLBACK_BASE_URL : TMDB_BASE_URL;
+      return tmdbClient(config);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export async function getPopularMovies(page = 1, options = {}) {
   const response = await tmdbClient.get('/movie/popular', {
@@ -52,3 +73,4 @@ export async function searchMovies(query, page = 1, options = {}) {
     page: response.data.page || page,
   };
 }
+

@@ -48,13 +48,14 @@ export default function SearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search movies by title..."
-          className="w-full pl-9 pr-9 py-2 bg-slate-900/90 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-600 focus:ring-1 focus:ring-slate-600 transition-colors"
+          aria-label="Search movies by title"
+          className="w-full pl-9 pr-9 py-2 bg-slate-900/90 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/80 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none transition-colors"
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-200 rounded-md transition-colors"
+            className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-200 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
             aria-label="Clear search"
           >
             <X className="w-3.5 h-3.5" />

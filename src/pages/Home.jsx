@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { getPopularMovies } from '../api/tmdb';
 import MovieGrid from '../components/MovieGrid';
 import MoodMatcher from '../components/MoodMatcher';
@@ -12,17 +12,20 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [moreError, setMoreError] = useState(null);
+
+  const isFetchingRef = useRef(false);
 
   const fetchInitialMovies = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      setMoreError(null);
       const data = await getPopularMovies(1);
       setMovies(data.results);
       setPage(1);
       setTotalPages(data.totalPages);
     } catch (err) {
-      console.error('Failed to fetch popular movies:', err);
       setError(
         err?.response?.data?.status_message ||
           'Failed to load popular movies. Please check your API key or network connection.'
@@ -33,25 +36,31 @@ export default function Home() {
   }, []);
 
   const fetchMoreMovies = useCallback(async () => {
-    if (loading || loadingMore || page >= totalPages) return;
+    if (loading || loadingMore || isFetchingRef.current || page >= totalPages)
+      return;
 
     try {
+      isFetchingRef.current = true;
       setLoadingMore(true);
+      setMoreError(null);
       const nextPage = page + 1;
       const data = await getPopularMovies(nextPage);
 
       setMovies((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const uniqueNewMovies = data.results.filter((m) => !existingIds.has(m.id));
+        const uniqueNewMovies = data.results.filter(
+          (m) => !existingIds.has(m.id)
+        );
         return [...prev, ...uniqueNewMovies];
       });
 
       setPage(nextPage);
       setTotalPages(data.totalPages);
     } catch (err) {
-      console.error('Failed to fetch more movies:', err);
+      setMoreError('Failed to load more movies. Check your connection.');
     } finally {
       setLoadingMore(false);
+      isFetchingRef.current = false;
     }
   }, [loading, loadingMore, page, totalPages]);
 
@@ -61,7 +70,7 @@ export default function Home() {
 
   const sentinelRef = useInfiniteScroll(fetchMoreMovies, {
     hasMore: page < totalPages,
-    isLoading: loading || loadingMore,
+    isLoading: loading || loadingMore || isFetchingRef.current,
   });
 
   return (
@@ -80,7 +89,9 @@ export default function Home() {
           <div className="space-y-6">
             <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-              <span className="text-base font-medium">Loading popular movies...</span>
+              <span className="text-base font-medium">
+                Loading popular movies...
+              </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
@@ -105,7 +116,7 @@ export default function Home() {
             <p className="text-sm text-slate-300">{error}</p>
             <button
               onClick={fetchInitialMovies}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Try Again</span>
@@ -118,11 +129,26 @@ export default function Home() {
             <MovieGrid movies={movies} />
 
             {page < totalPages && (
-              <div ref={sentinelRef} className="h-16 flex items-center justify-center py-4">
+              <div
+                ref={sentinelRef}
+                className="min-h-16 flex flex-col items-center justify-center py-6"
+              >
                 {loadingMore && (
                   <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
                     <Loader2 className="w-5 h-5 animate-spin text-red-500" />
                     <span>Loading more movies...</span>
+                  </div>
+                )}
+                {moreError && !loadingMore && (
+                  <div className="flex items-center gap-3 text-red-400 text-sm bg-red-950/40 border border-red-800/50 px-4 py-2 rounded-lg">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{moreError}</span>
+                    <button
+                      onClick={fetchMoreMovies}
+                      className="ml-2 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-md text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
               </div>

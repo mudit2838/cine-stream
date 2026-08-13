@@ -30,8 +30,7 @@ export default function MoodMatcher() {
       } else {
         setError(`Couldn't find a match for that mood — try rephrasing?`);
       }
-    } catch (err) {
-      console.error('Mood Matcher error:', err);
+    } catch {
       setError(`Couldn't find a match for that mood — try rephrasing?`);
     } finally {
       setLoading(false);
@@ -57,7 +56,8 @@ export default function MoodMatcher() {
             What are you in the mood for?
           </h2>
           <p className="text-sm text-slate-400">
-            Describe your current mood or vibe to get a personalized movie suggestion.
+            Describe your current mood or vibe to get a personalized movie
+            suggestion.
           </p>
         </div>
       </div>
@@ -69,12 +69,13 @@ export default function MoodMatcher() {
             value={moodInput}
             onChange={(e) => setMoodInput(e.target.value)}
             placeholder='e.g., "sad but want an action movie" or "nostalgic 90s comedy"'
-            className="flex-1 px-4 py-3 bg-slate-950/80 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/80 transition-colors shadow-inner"
+            aria-label="Describe your movie mood"
+            className="flex-1 px-4 py-3 bg-slate-950/80 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/80 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none transition-colors shadow-inner"
           />
           <button
             type="submit"
             disabled={loading || !moodInput.trim()}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors shadow-md shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors shadow-md shrink-0 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           >
             {loading ? (
               <>
@@ -99,7 +100,7 @@ export default function MoodMatcher() {
           </div>
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-200 rounded-lg text-xs font-medium transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 text-red-200 rounded-lg text-xs font-medium transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Try Again</span>
@@ -123,7 +124,7 @@ export default function MoodMatcher() {
 
             <button
               onClick={handleReset}
-              className="text-xs text-slate-400 hover:text-slate-200 underline transition-colors"
+              className="text-xs text-slate-400 hover:text-slate-200 underline transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none rounded"
             >
               Clear Result
             </button>

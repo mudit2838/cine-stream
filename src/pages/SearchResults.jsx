@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { searchMovies } from '../api/tmdb';
@@ -16,7 +16,10 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [moreError, setMoreError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -27,6 +30,7 @@ export default function SearchResults() {
       setLoadingMore(false);
       setHasSearched(false);
       setError(null);
+      setMoreError(null);
       return;
     }
 
@@ -36,16 +40,22 @@ export default function SearchResults() {
       try {
         setLoading(true);
         setError(null);
+        setMoreError(null);
         setHasSearched(true);
-        const data = await searchMovies(query, 1, { signal: controller.signal });
+        const data = await searchMovies(query, 1, {
+          signal: controller.signal,
+        });
         setMovies(data.results);
         setPage(1);
         setTotalPages(data.totalPages);
       } catch (err) {
-        if (axios.isCancel(err) || err.name === 'CanceledError' || err.name === 'AbortError') {
+        if (
+          axios.isCancel(err) ||
+          err.name === 'CanceledError' ||
+          err.name === 'AbortError'
+        ) {
           return;
         }
-        console.error('Failed to search movies:', err);
         setError(
           err?.response?.data?.status_message ||
             'Failed to perform search. Please check your network connection.'
@@ -65,31 +75,43 @@ export default function SearchResults() {
   }, [query]);
 
   const fetchMoreResults = useCallback(async () => {
-    if (loading || loadingMore || page >= totalPages || !query.trim()) return;
+    if (
+      loading ||
+      loadingMore ||
+      isFetchingRef.current ||
+      page >= totalPages ||
+      !query.trim()
+    )
+      return;
 
     try {
+      isFetchingRef.current = true;
       setLoadingMore(true);
+      setMoreError(null);
       const nextPage = page + 1;
       const data = await searchMovies(query, nextPage);
 
       setMovies((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const uniqueNewMovies = data.results.filter((m) => !existingIds.has(m.id));
+        const uniqueNewMovies = data.results.filter(
+          (m) => !existingIds.has(m.id)
+        );
         return [...prev, ...uniqueNewMovies];
       });
 
       setPage(nextPage);
       setTotalPages(data.totalPages);
     } catch (err) {
-      console.error('Failed to fetch more search results:', err);
+      setMoreError('Failed to load more results. Check your connection.');
     } finally {
       setLoadingMore(false);
+      isFetchingRef.current = false;
     }
   }, [loading, loadingMore, page, totalPages, query]);
 
   const sentinelRef = useInfiniteScroll(fetchMoreResults, {
     hasMore: page < totalPages,
-    isLoading: loading || loadingMore,
+    isLoading: loading || loadingMore || isFetchingRef.current,
   });
 
   return (
@@ -99,7 +121,8 @@ export default function SearchResults() {
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">
           {query ? (
             <>
-              Search Results for <span className="text-red-400">&quot;{query}&quot;</span>
+              Search Results for{' '}
+              <span className="text-red-400">&quot;{query}&quot;</span>
             </>
           ) : (
             'Search Movies'
@@ -112,7 +135,8 @@ export default function SearchResults() {
           <Search className="w-12 h-12 text-slate-600 mx-auto" />
           <p className="text-lg font-medium">Search for movies by title</p>
           <p className="text-sm text-slate-500">
-            Use the search bar in the top navigation to search the movie catalog.
+            Use the search bar in the top navigation to search the movie
+            catalog.
           </p>
         </div>
       )}
@@ -146,7 +170,7 @@ export default function SearchResults() {
           <p className="text-sm text-slate-300">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Try Again</span>
@@ -160,7 +184,8 @@ export default function SearchResults() {
             No movies found for &quot;{query}&quot;
           </p>
           <p className="text-sm text-slate-500">
-            Try checking for spelling errors or searching for a different movie title.
+            Try checking for spelling errors or searching for a different movie
+            title.
           </p>
         </div>
       )}
@@ -170,11 +195,26 @@ export default function SearchResults() {
           <MovieGrid movies={movies} />
 
           {page < totalPages && (
-            <div ref={sentinelRef} className="h-16 flex items-center justify-center py-4">
+            <div
+              ref={sentinelRef}
+              className="min-h-16 flex flex-col items-center justify-center py-6"
+            >
               {loadingMore && (
                 <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
                   <Loader2 className="w-5 h-5 animate-spin text-red-500" />
                   <span>Loading more results...</span>
+                </div>
+              )}
+              {moreError && !loadingMore && (
+                <div className="flex items-center gap-3 text-red-400 text-sm bg-red-950/40 border border-red-800/50 px-4 py-2 rounded-lg">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{moreError}</span>
+                  <button
+                    onClick={fetchMoreResults}
+                    className="ml-2 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-md text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+                  >
+                    Retry
+                  </button>
                 </div>
               )}
             </div>
