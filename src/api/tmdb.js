@@ -5,9 +5,13 @@ const TMDB_BASE_URL =
   'https://api.tmdb.org/3';
 const TMDB_FALLBACK_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_KEY =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TMDB_KEY) ||
-  (typeof process !== 'undefined' && process.env.VITE_TMDB_KEY) ||
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.VITE_TMDB_KEY) ||
+  (typeof globalThis !== 'undefined' &&
+    globalThis.process?.env?.VITE_TMDB_KEY) ||
   '';
+
 
 
 
@@ -43,8 +47,8 @@ const tmdbClient = axios.create({
   },
 });
 
-// Interceptor to fallback if primary domain experiences network/DNS failure
 tmdbClient.interceptors.response.use(
+
   (response) => response,
   async (error) => {
     const config = error.config;
@@ -91,10 +95,9 @@ export async function getPopularMovies(page = 1, options = {}) {
 }
 
 if (typeof window !== 'undefined') {
-  try {
-    getPopularMovies(1).catch(() => {});
-  } catch {}
+  getPopularMovies(1).catch(() => {});
 }
+
 
 
 export async function searchMovies(query, page = 1, options = {}) {
