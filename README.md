@@ -3,6 +3,11 @@
 CineStream is a modern "Netflix-lite" media discovery single-page application (SPA) built with React 18, Vite, Tailwind CSS, and Google Gemini AI. Users can browse popular movies, perform debounced real-time searches, receive AI-powered mood-based movie recommendations, and manage a persistent favorites list across sessions.
 
 ---
+## 🔗 Project Links
+* **Live Demo:** [https://cine-stream-nu-three.vercel.app]
+* **GitHub Repository:** [https://github.com/mudit2838/cine-stream.git]
+
+
 
 ## 🚀 Features
 
