@@ -1,10 +1,14 @@
+'use client';
 import { createContext, useContext, useCallback } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 export const FavoritesContext = createContext();
 
 export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useLocalStorage('cinestream_favorites', []);
+  const [favorites, setFavorites, ready] = useLocalStorage(
+    'cinestream_favorites',
+    []
+  );
 
   const addFavorite = useCallback(
     (movie) => {
@@ -49,6 +53,7 @@ export function FavoritesProvider({ children }) {
     <FavoritesContext.Provider
       value={{
         favorites,
+        ready,
         addFavorite,
         removeFavorite,
         isFavorite,

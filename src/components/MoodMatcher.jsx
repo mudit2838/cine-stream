@@ -1,5 +1,5 @@
+'use client';
 import { useState } from 'react';
-import { searchMovies } from '../api/tmdb';
 import MovieCard from './MovieCard';
 import { Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -20,19 +20,19 @@ export default function MoodMatcher() {
       setError(null);
       setMatchedMovie(null);
 
-      const { getMoodMatchTitle } = await import('../api/ai');
-      const title = await getMoodMatchTitle(trimmed);
-      setSuggestedTitle(title);
-
-
-      const tmdbResult = await searchMovies(title, 1);
-      if (tmdbResult.results && tmdbResult.results.length > 0) {
-        setMatchedMovie(tmdbResult.results[0]);
-      } else {
-        setError(`Couldn't find a match for that mood — try rephrasing?`);
-      }
-    } catch {
-      setError(`Couldn't find a match for that mood — try rephrasing?`);
+      const response = await fetch('/api/mood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood: trimmed }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || 'Recommendation unavailable.');
+      setSuggestedTitle(data.title);
+      if (data.movie) setMatchedMovie(data.movie);
+      else setError('No movie found for that mood. Try another description.');
+    } catch (err) {
+      setError(err.message || 'Recommendation unavailable. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,11 +67,12 @@ export default function MoodMatcher() {
         <div className="relative flex flex-col sm:flex-row gap-3">
           <input
             type="text"
+            maxLength={300}
             value={moodInput}
             onChange={(e) => setMoodInput(e.target.value)}
             placeholder='e.g., "sad but want an action movie" or "nostalgic 90s comedy"'
             aria-label="Describe your movie mood"
-            className="flex-1 px-4 py-3 bg-slate-950/80 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/80 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none transition-colors shadow-inner"
+            className="min-w-0 flex-1 px-4 py-3 bg-slate-950/80 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/80 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none transition-colors shadow-inner"
           />
           <button
             type="submit"

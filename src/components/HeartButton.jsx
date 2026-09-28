@@ -1,8 +1,9 @@
+'use client';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 
 export default function HeartButton({ movie, className = '' }) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite, ready } = useFavorites();
   const isFav = movie && movie.id ? isFavorite(movie.id) : false;
 
   const handleClick = (e) => {
@@ -16,6 +17,8 @@ export default function HeartButton({ movie, className = '' }) {
   return (
     <button
       type="button"
+      disabled={!ready}
+      aria-pressed={isFav}
       onClick={handleClick}
       aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
       className={`p-2 rounded-full backdrop-blur-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none ${

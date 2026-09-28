@@ -38,3 +38,10 @@ npm-home
 npm-prefix
 prd.md
 
+
+.next/
+.vercel/
+.env*
+!.env.example
+playwright-report/
+test-results/
