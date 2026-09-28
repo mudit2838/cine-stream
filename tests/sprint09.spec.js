@@ -27,6 +27,10 @@ test('favorites persist across reload and navigation without hydration errors', 
   await page.goto('/');
   await page.getByRole('button', { name: 'Add to favorites' }).first().click();
   await page.getByRole('link', { name: 'Favorites', exact: true }).click();
+  await expect(page).toHaveURL(/\/favorites$/);
+  await expect(
+    page.getByRole('heading', { name: 'Favorite Movies', exact: true })
+  ).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Fixture Movie 1', exact: true })
   ).toBeVisible();
@@ -83,9 +87,11 @@ test('API validation, upstream errors and optional AI configuration are honest',
   expect(ai.status()).toBe(503);
   expect((await ai.json()).error).toContain('not configured');
   await page.goto('/search?q=upstream-failure');
-  await expect(page.getByRole('alert')).toContainText(
-    'Movies are temporarily unavailable'
-  );
+  await expect(
+    page
+      .getByRole('alert')
+      .filter({ hasText: 'Movies are temporarily unavailable' })
+  ).toContainText('Movies are temporarily unavailable');
 });
 
 test('mobile page fits viewport and saved invalid JSON does not crash', async ({
