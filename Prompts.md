@@ -49,3 +49,7 @@ Codex inspected the existing repository and implemented the Next.js migration, p
 - Fetch initial popular movies directly from an async Server Component; browser fetches are for subsequent interactions.
 - Keep test fixtures confined to the test process. Never substitute them for real movie data in deployment.
 - Preserve earlier Sprint 08 prompt log entries as historical records.
+
+
+## Mood Matcher follow-up (2026-09-28)
+User reported: “isme gemini ki api add ni ki hia sayad. kyuki recomonnadation system work ni kar rha”. Live endpoint returned a generic 503 after the credential presence check. Added safe provider error classification and diagnostics, and disabled thinking for Gemini 2.5 Flash movie-title requests to avoid exhausting the small output budget. No new API key was created or added.
