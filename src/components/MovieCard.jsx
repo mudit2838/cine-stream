@@ -1,73 +1,44 @@
-import { useState } from 'react';
+import Link from 'next/link';
 import { Star } from 'lucide-react';
-import { getPosterUrl, getPosterSrcSet } from '../api/tmdb';
-import PosterFallback from './PosterFallback';
 import HeartButton from './HeartButton';
-
+import MoviePoster from './MoviePoster';
 export default function MovieCard({ movie, isPriority = false }) {
-  const [imageError, setImageError] = useState(false);
-
   if (!movie) return null;
-
-  const title = movie.title || movie.name || movie.original_title || 'Untitled';
-  const releaseYear = movie.release_date
-    ? movie.release_date.substring(0, 4)
-    : movie.first_air_date
-      ? movie.first_air_date.substring(0, 4)
-      : 'N/A';
-
-  const rating =
-    typeof movie.vote_average === 'number' && movie.vote_average > 0
-      ? movie.vote_average.toFixed(1)
-      : 'N/A';
-
-  const posterUrl = getPosterUrl(movie.poster_path);
-  const posterSrcSet = getPosterSrcSet(movie.poster_path);
-  const showFallback = !posterUrl || imageError;
-
+  const title = movie.title || movie.name || 'Untitled';
   return (
-    <div className="group relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:shadow-xl hover:border-slate-700 hover:scale-[1.02] transition-all duration-300 flex flex-col h-full">
-      <div className="relative aspect-[2/3] w-full bg-slate-950 overflow-hidden flex-shrink-0">
-        <div className="absolute top-2 left-2 z-20">
+    <article className="group relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-slate-600 transition-colors flex flex-col h-full">
+      <div className="relative aspect-[2/3] bg-slate-950">
+        <Link
+          href={`/movie/${movie.id}`}
+          aria-label={`View ${title}`}
+          className="block absolute inset-0"
+        >
+          <MoviePoster
+            path={movie.poster_path}
+            title={title}
+            priority={isPriority}
+          />
+        </Link>
+        <div className="absolute top-2 left-2 z-10">
           <HeartButton movie={movie} />
         </div>
-
-        {showFallback ? (
-          <PosterFallback title={title} />
-        ) : (
-          <img
-            src={posterUrl}
-            srcSet={posterSrcSet || undefined}
-            sizes="(max-width: 640px) 185px, 342px"
-            alt={title}
-            width="185"
-            height="278"
-            loading={isPriority ? 'eager' : 'lazy'}
-            fetchpriority={isPriority ? 'high' : 'low'}
-            onError={() => setImageError(true)}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        )}
-
-
-        {rating !== 'N/A' && (
-          <div className="absolute top-2 right-2 px-2 py-1 bg-slate-950/80 backdrop-blur-md rounded-md border border-slate-700/50 flex items-center gap-1 text-xs font-semibold text-amber-400 z-10">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span>{rating}</span>
-          </div>
+        {movie.vote_average > 0 && (
+          <span className="absolute top-2 right-2 pointer-events-none flex items-center gap-1 bg-slate-950/90 px-2 py-1 rounded text-xs text-amber-400">
+            <Star className="w-3 h-3" />
+            {movie.vote_average.toFixed(1)}
+          </span>
         )}
       </div>
-
-      <div className="p-3.5 flex flex-col flex-1 justify-between gap-1">
-        <h3
-          className="font-semibold text-slate-100 text-sm line-clamp-1 group-hover:text-red-400 transition-colors"
-          title={title}
-        >
-          {title}
+      <div className="p-3.5">
+        <h3 className="font-semibold text-sm line-clamp-1">
+          <Link href={`/movie/${movie.id}`} className="hover:text-red-400">
+            {title}
+          </Link>
         </h3>
-        <p className="text-xs text-slate-400 font-medium">{releaseYear}</p>
+        <p className="text-xs text-slate-400 mt-1">
+          {movie.release_date?.slice(0, 4) || 'Release date unknown'}
+        </p>
       </div>
-    </div>
+    </article>
   );
 }
-

@@ -1,10 +1,18 @@
-import { Link } from 'react-router-dom';
+'use client';
+import Link from 'next/link';
 import { useFavorites } from '../context/FavoritesContext';
 import MovieGrid from '../components/MovieGrid';
 import { Heart, ArrowLeft } from 'lucide-react';
 
 export default function Favorites() {
-  const { favorites } = useFavorites();
+  const { favorites, ready } = useFavorites();
+
+  if (!ready)
+    return (
+      <p role="status" className="py-12 text-slate-400">
+        Loading your favorites...
+      </p>
+    );
 
   return (
     <div className="space-y-6">
@@ -33,7 +41,7 @@ export default function Favorites() {
             watch!
           </p>
           <Link
-            to="/"
+            href="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors shadow-md mt-2 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           >
             <ArrowLeft className="w-4 h-4" />

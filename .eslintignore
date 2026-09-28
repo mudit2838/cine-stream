@@ -1,7 +1,4 @@
-dist
 node_modules
-npm-cache
-npm-home
-npm-tmp
-npm-prefix
-install.log
+.next
+playwright-report
+test-results
